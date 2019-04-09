@@ -1,0 +1,197 @@
+
+#######function 3######
+set.seed(0)
+r = 100
+final.mat = matrix(0,r,1)
+final.ratio.mat = matrix(0,r,1)
+################
+for(iter in 1:r){
+  
+
+n = 200
+X = runif(n,-2,2)
+Y = sin(2*X)+2*exp(-16*X^2)
+hh = seq(0.01,1,0.01)
+hise.mat = matrix(0,length(hh),2)
+hise.mat[,1] = hh
+for(i in 1:length(hh)){
+  h <- hh[i]
+  
+  kernel.temp <- function(h, # scalar 
+                          X.vec, # vector
+                          x # scalar
+  ) {
+    (1/h)*(1/sqrt(2*pi))*exp(-1*((X.vec-x)^2)/(2*h^2)) # output is vector
+  }
+  
+  s_r.x.h <- function(n, # scalar
+                      X.vec, # vector
+                      x, # scalar
+                      r, # scalar
+                      h # scalar
+  ) {
+    sum((X.vec-x)^r * kernel.temp(h,X.vec,x)) # output is scalar
+  }
+  
+  w_x.h <- function(n, # scalar
+                    X.vec, # vector
+                    x, # scalar
+                    h # scalar
+  ) {
+    ( s_r.x.h(n, X.vec, x, 2, h) -  s_r.x.h(n, X.vec, x, 1, h)*(X.vec-x) ) * kernel.temp(h, X.vec, x) /
+      (s_r.x.h(n, X.vec, x, 2, h)*s_r.x.h(n, X.vec, x, 0, h) - s_r.x.h(n, X.vec, x, 1, h)^2 ) # output is vector
+  }
+  
+  m.hat <- function(n, X.vec, x, h) {
+    t(w_x.h(n,X.vec,x,h))%*%Y
+  }
+  
+  
+  m.func1  <- function(x) {
+    sin(2*x) + 2*exp(-16*(x^2))
+  }
+  
+  m.func <- function(x) {
+    (m.hat(n, X, x, h)-m.func1(x))^2
+  }
+  
+  int.value = integrate(m.func, -2,2)
+  hise.mat[i,2] = int.value$value
+}
+
+pos.ise = which.min(hise.mat[,2])
+hise.mat[,1][pos.ise]
+
+
+
+m.mat = matrix(0,length(Y),1)
+hlscv.mat = matrix(0,length(hh),2)
+hlscv.mat[,1] = hh
+for(i in 1:length(hh)){
+  h <- hh[i]
+ for(k in 1:n){
+  x = X[k]
+  m.mat[k,] = t(w_x.h(n,X,x,h)[-k])%*%Y[-k]
+}
+hlscv.mat[i,2] = sum((Y-m.mat)^2)
+}
+pos.lscv = which.min(hlscv.mat[,2])
+hlscv.mat[,1][pos.lscv]
+final.mat[iter,1] = (hlscv.mat[,1][pos.lscv]-hise.mat[,1][pos.ise])/hise.mat[,1][pos.ise]
+final.ratio.mat[iter,1] = log(hise.mat[,2][pos.lscv]/hise.mat[,2][pos.ise])
+}
+#####grapics
+par(mfrow=c(1,3))
+h = hlscv.mat[,1][pos.lscv]
+for(k in 1:n){
+  x = X[k]
+  m.mat[k,] = t(w_x.h(n,X,x,h)[-k])%*%Y[-k]
+}
+
+d = data.frame(X,Y)
+d = d[c(order(d$X)),]
+plot(d,main = "Y and cv-hat(Y)",type="l")
+dd = data.frame(X,m.mat)
+dd = dd[c(order(dd$X)),]
+lines(dd,col="red")
+boxplot(final.mat,main="(h-h_ise)/h_ise") ;boxplot(final.ratio.mat,main="log(ISE(h)/ISE(h_ise))")
+
+#############################function 4
+set.seed(0)
+r = 10
+final.mat2 = matrix(0,r,1)
+final.ratio.mat2 = matrix(0,r,1)
+################
+for(iter in 1:r){
+  
+  
+  n = 200
+  X = runif(n,-2,2)
+  Y = X + 2*exp(-16*X^2)
+  hh = seq(0.01,1,0.01)
+  hise.mat = matrix(0,length(hh),2)
+  hise.mat[,1] = hh
+  for(i in 1:length(hh)){
+    h <- hh[i]
+    
+    kernel.temp <- function(h, # scalar 
+                            X.vec, # vector
+                            x # scalar
+    ) {
+      (1/h)*(1/sqrt(2*pi))*exp(-1*((X.vec-x)^2)/(2*h^2)) # output is vector
+    }
+    
+    s_r.x.h <- function(n, # scalar
+                        X.vec, # vector
+                        x, # scalar
+                        r, # scalar
+                        h # scalar
+    ) {
+      sum((X.vec-x)^r * kernel.temp(h,X.vec,x)) # output is scalar
+    }
+    
+    w_x.h <- function(n, # scalar
+                      X.vec, # vector
+                      x, # scalar
+                      h # scalar
+    ) {
+      ( s_r.x.h(n, X.vec, x, 2, h) -  s_r.x.h(n, X.vec, x, 1, h)*(X.vec-x) ) * kernel.temp(h, X.vec, x) /
+        (s_r.x.h(n, X.vec, x, 2, h)*s_r.x.h(n, X.vec, x, 0, h) - s_r.x.h(n, X.vec, x, 1, h)^2 ) # output is vector
+    }
+    
+    m.hat <- function(n, X.vec, x, h) {
+      t(w_x.h(n,X.vec,x,h))%*%Y
+    }
+    
+    
+    m.func2  <- function(x) {
+      x + 2*exp(-16*x^2)
+    }
+    
+    m.func <- function(x) {
+      (m.hat(n, X, x, h)-m.func2(x))^2
+    }
+    
+    int.value = integrate(m.func, -2,2)
+    hise.mat[i,2] = int.value$value
+  }
+  
+  pos.ise = which.min(hise.mat[,2])
+  hise.mat[,1][pos.ise]
+  
+  
+  
+  m.mat = matrix(0,length(Y),1)
+  hlscv.mat = matrix(0,length(hh),2)
+  hlscv.mat[,1] = hh
+  for(i in 1:length(hh)){
+    h <- hh[i]
+    for(k in 1:n){
+      x = X[k]
+      m.mat[k,] = t(w_x.h(n,X,x,h)[-k])%*%Y[-k]
+    }
+    hlscv.mat[i,2] = sum((Y-m.mat)^2)
+  }
+  pos.lscv = which.min(hlscv.mat[,2])
+  hlscv.mat[,1][pos.lscv]
+  final.mat2[iter,1] = (hlscv.mat[,1][pos.lscv]-hise.mat[,1][pos.ise])/(hise.mat[,1][pos.ise])
+  final.ratio.mat2[iter,1] = log(hise.mat[,2][pos.lscv]/hise.mat[,2][pos.ise])
+}
+
+
+#####grapics
+#####grapics
+par(mfrow=c(1,3))
+h = hlscv.mat[,1][pos.lscv]
+for(k in 1:n){
+  x = X[k]
+  m.mat[k,] = t(w_x.h(n,X,x,h)[-k])%*%Y[-k]
+}
+
+d = data.frame(X,Y)
+d = d[c(order(d$X)),]
+plot(d,main = "Y and cv-hat(Y)",type="l")
+dd = data.frame(X,m.mat)
+dd = dd[c(order(dd$X)),]
+lines(dd,col="red")
+boxplot(final.mat2,main="(h-h_ise)/h_ise") ;boxplot(final.ratio.mat2,main="log(ISE(h)/ISE(h_ise))")
