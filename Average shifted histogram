@@ -1,0 +1,60 @@
+install.packages("HistogramTools")
+library(HistogramTools)
+
+n = 100
+#############################
+x.vec = rnorm(n)
+b = seq(min(x.vec)*1.1,max(x.vec)*1.1,0.2)
+h = hist(x.vec,breaks = b,freq=F)
+HistToASH(h,m=5,kopt=c(2,2))
+lines(HistToASH(h),col="red")
+
+###########################################
+x.vec1 = rnorm(n,2,1)
+x.vec2 = rnorm(n,-2,1)
+p = 0.5
+I = rbinom(n,1,0.5)
+y = (1-I)*x.vec2+I*x.vec1
+h = hist(y,breaks = seq(-5,5,0.3),freq=F)
+lines(HistToASH(h),col="red")
+
+######################################### ASH function #############################################
+rm(list=ls())
+
+set.seed(1234)
+n = 100
+data = rnorm(n)
+
+# n = number of data
+# h = bin width 
+# K = number of bin
+
+#Average Shifted Histogram function
+ASH.function = function(x,m,K,data){
+  rg1 = range(data)[1]*40
+  rg2 = range(data)[2]*40
+  h = (range(data)[2]-range(data)[1])/K
+  q = 0
+  for(i in 1:n){
+    for(k in -(K*m):(K*m)){
+      for(l in (1-m):(m-1)){
+        q = q +(1-(abs(l)/m))*((k-1)*(h/m)<=x & x<k*(h/m))*(((k+l-1)*(h/m))<=data[i] & data[i]<(k+l)*(h/m))
+       }
+      }
+    }
+  return(q/(n*h))
+  }
+
+x = data; m=20; K=10
+y = ASH.function(x,m,K,data)
+df = data.frame(x,y)
+
+#plotting
+ggplot(df) + 
+  geom_histogram(aes(x,..density..),fill="lightblue",color="darkblue") + 
+  geom_line(aes(x,y))
+
+#compare with hist function
+h = hist(x,breaks = seq(min(x),max(x),length.out = 31),freq=F)
+lines(HistToASH(h),col="red")
+
