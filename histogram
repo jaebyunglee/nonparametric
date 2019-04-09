@@ -1,0 +1,39 @@
+rm(list=ls())
+#####package#######
+library(ggplot2)
+library(gridExtra)
+#data
+chol <- read.table(url("http://assets.datacamp.com/blog_assets/chol.txt"), header = TRUE)
+############################using plot############################
+#histogram function
+hist.function = function(data,breaks){
+  s = seq(round(min(data),1)-1,round(max(data),1)+1,length.out = breaks)
+  freq.vec = c(rep(0,length(s)-1))
+  mid.vec = c(rep(0,length(s)-1))
+  par(mfrow=c(1,2))
+    for(i in 1:length(s)-1){
+        freq.vec[i] = sum(s[i]<=data & data<s[i+1])
+        mid.vec[i] = (s[i]+s[i+1])/2
+      }
+  plot(mid.vec,freq.vec,
+           type="h",
+           main = "Histogram of data",
+           xlab = "data",
+           ylab = "Frequency",
+           ylim = c(0,max(freq.vec)+max(freq.vec)*0.2))
+  text(mid.vec,freq.vec,labels = freq.vec,pos = 3)
+  hist(data,breaks = s)
+}
+  
+#value
+hist.function(chol$AGE,10)
+##############################using ggplot2############################
+h1 = ggplot(chol,aes(chol$AGE))+geom_histogram()
+h2 = ggplot(chol,aes(chol$AGE))+geom_histogram(binwidth = 5)
+h3 = ggplot(chol,aes(chol$AGE))+geom_histogram(color = "darkblue",fill="lightblue")
+h4 = ggplot(chol,aes(chol$AGE))+geom_histogram(bins = 50)
+h5 = ggplot(chol,aes(chol$AGE))+geom_freqpoly()
+h6 = ggplot(chol,aes(chol$AGE))+stat_bin()
+grid.arrange(h1,h2,h3,h4,h5,h6,nrow=2)
+####density#######
+ggplot(chol,aes(chol$AGE))+geom_density(color="darkblue",fill="lightblue")
